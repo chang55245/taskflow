@@ -1,0 +1,7 @@
+[
+    {
+      "directory": "/home/lchang21/taskflow/taskflow-lib",
+      "command": "g++ -std=c++17  -o lib.o -I /home/lchang21/taskflow/ -c /home/lchang21/taskflow/taskflow-lib/lib.cpp",
+      "file": "/home/lchang21/taskflow/taskflow-lib/lib.cpp"
+    }
+]
