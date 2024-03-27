@@ -10,3 +10,8 @@
 
 # use this static library
 /home/lchang21/llvm-release/llvm-9/bin/clang++ -g -std=c++17 /home/lchang21/taskflow/taskflow-lib/use.cpp -I /home/lchang21/taskflow/taskflow-lib/ -pthread lib.a -o use.exe
+
+
+# show ast
+/home/lchang21/llvm-release/llvm-9/bin/clang-check -ast-dump -ast-dump-filter=main /home/lchang21/taskflow/taskflow-lib/use.cpp -- -std=c++17 -I /home/lchang21/taskflow/taskflow-lib/ -pthread
+
