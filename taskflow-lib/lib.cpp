@@ -1,9 +1,13 @@
 #include <cstdio>
+#include <map>
+#include <set>
+#include <string>
 #include <taskflow/taskflow.hpp>  // Taskflow is header-only
 #include "lib.hpp"
+#include "taskflow/core/task.hpp"
 
 
-
+std::map<std::string, void*> taskMap;
 void taskflowLib::create_taskflow(){
   taskflow_ptr = new tf::Taskflow();
 }
@@ -18,20 +22,21 @@ inline taskflowLib::taskflowLib(){
 }
 
 // task definition
-void* taskflowLib::task_definition(std::string name, void (*func)()){
-    tf::Taskflow *taskflow = (tf::Taskflow *) taskflow_ptr;
-
-    // to fix the lifetime of the task, task will be freed after the function ends, task needs to be created in the main scope
-    // no need to return 
-    tf::Task *new_task = new tf::Task();
-    *new_task = taskflow->emplace(func).name(name);
-    void* task_ptr = new_task;
-    return task_ptr;   
+void taskflowLib::task_definition(std::string name, void (*func)()){
+    tf::Taskflow *taskflow = (tf::Taskflow *) taskflow_ptr;    
+    if (!taskflow) {
+        return; 
+    }
+    auto task = taskflow->emplace(func).name(name);
+    // copy the task to the heap
+    auto t = new tf::Task(task);
+    
+    taskMap[name] = (void*) t;
 }
 // dependency definition
 void taskflowLib::add_dependency(void* prev, void* next){
-    tf::Task *t1 = (tf::Task *) prev;
-    tf::Task *t2 = (tf::Task *) next;
+    tf::Task *t1 = (tf::Task*) (prev);
+    tf::Task *t2 = (tf::Task*) (next);
     t1->precede(*t2);
 }
 
@@ -52,15 +57,13 @@ int main(){
 
     // need some way to new a task class------------------
 
-
-
     // reason why this is wrong, the allocated memory is not enough? the memory is dynamically allocated?
-    auto * A = myTaskflowLib.task_definition("A", [](){printf("A\n");});
-    auto * B = myTaskflowLib.task_definition("B", [](){printf("B\n");});
-    auto * C = myTaskflowLib.task_definition("C", [](){printf("C\n");});
+    myTaskflowLib.task_definition("A", [](){printf("A\n");});
+    myTaskflowLib.task_definition("B", [](){printf("B\n");});
+    myTaskflowLib.task_definition("C", [](){printf("C\n");});
 
-    myTaskflowLib.add_dependency(&C, &B);
-    myTaskflowLib.add_dependency(&B, &A);
+    myTaskflowLib.add_dependency(taskMap["C"], taskMap["B"]);
+    myTaskflowLib.add_dependency(taskMap["B"], taskMap["A"]);
 
     myTaskflowLib.execute();    
 //     tf::Executor executor;
