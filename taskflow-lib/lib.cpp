@@ -14,7 +14,7 @@ void taskflowLib::create_execution(){
   executor_ptr = new tf::Executor();
 }
 
-inline taskflowLib::taskflowLib(){
+taskflowLib::taskflowLib(){
     create_taskflow();
     create_execution();
 }
@@ -45,18 +45,18 @@ void taskflowLib::execute(){
     executor->run(*taskflow).wait();
 }
 
-int main(){
+// int main(){
   
-    auto myTaskflowLib = taskflowLib();
+//     auto myTaskflowLib = taskflowLib();
 
-    auto A = myTaskflowLib.task_definition("A", [](){printf("A\n");});
-    auto B = myTaskflowLib.task_definition("B", [](){printf("B\n");});
-    auto C = myTaskflowLib.task_definition("C", [](){printf("C\n");});
+//     auto A = myTaskflowLib.task_definition("A", [](){printf("A\n");});
+//     auto B = myTaskflowLib.task_definition("B", [](){printf("B\n");});
+//     auto C = myTaskflowLib.task_definition("C", [](){printf("C\n");});
 
-    myTaskflowLib.add_dependency(C, B);
-    myTaskflowLib.add_dependency(B, A);
+//     myTaskflowLib.add_dependency(C, B);
+//     myTaskflowLib.add_dependency(B, A);
 
-    myTaskflowLib.execute();    
+//     myTaskflowLib.execute();    
 
-  return 0;
-}
+//   return 0;
+// }
