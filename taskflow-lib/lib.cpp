@@ -20,8 +20,12 @@ inline taskflowLib::taskflowLib(){
 // task definition
 void* taskflowLib::task_definition(std::string name, void (*func)()){
     tf::Taskflow *taskflow = (tf::Taskflow *) taskflow_ptr;
-    tf::Task new_task = taskflow->emplace(func).name(name);
-    void* task_ptr = &new_task;
+
+    // to fix the lifetime of the task, task will be freed after the function ends, task needs to be created in the main scope
+    // no need to return 
+    tf::Task *new_task = new tf::Task();
+    *new_task = taskflow->emplace(func).name(name);
+    void* task_ptr = new_task;
     return task_ptr;   
 }
 // dependency definition
@@ -41,12 +45,22 @@ void taskflowLib::execute(){
 int main(){
   
     auto myTaskflowLib = taskflowLib();
+    tf::Taskflow *taskflow = (tf::Taskflow *) myTaskflowLib.taskflow_ptr;
+    // auto A = taskflow->emplace([](){printf("A\n");}).name("A");
+    // auto B = taskflow->emplace([](){printf("B\n");}).name("B");
+    // auto C = taskflow->emplace([](){printf("C\n");}).name("C");
+
+    // need some way to new a task class------------------
+
+
+
+    // reason why this is wrong, the allocated memory is not enough? the memory is dynamically allocated?
     auto * A = myTaskflowLib.task_definition("A", [](){printf("A\n");});
     auto * B = myTaskflowLib.task_definition("B", [](){printf("B\n");});
     auto * C = myTaskflowLib.task_definition("C", [](){printf("C\n");});
 
-    myTaskflowLib.add_dependency(C, B);
-    myTaskflowLib.add_dependency(B, A);
+    myTaskflowLib.add_dependency(&C, &B);
+    myTaskflowLib.add_dependency(&B, &A);
 
     myTaskflowLib.execute();    
 //     tf::Executor executor;
