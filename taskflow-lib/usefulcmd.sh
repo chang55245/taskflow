@@ -26,3 +26,6 @@ CPLUS_INCLUDE_PATH=/home/lchang21/.vscode-server/data/User/globalStorage/llvm-vs
 
 
 /heorot/lchang21/llvm-release/llvm/bin/clang++  -g -std=c++17 /heorot/lchang21/taskflow/taskflow/taskflow-lib/test.cpp -I /heorot/lchang21/taskflow/taskflow/taskflow-lib/ -pthread lib.a -o test.exe
+
+
+/heorot/lchang21/llvm/Polygeist/build/bin/polygeist-opt test.mlir --canonicalize-polygeist  -convert-polygeist-to-llvm
