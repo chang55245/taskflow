@@ -20,7 +20,8 @@ taskflowLib::taskflowLib(){
 }
 
 // task definition
-void* taskflowLib::task_definition(std::string name, void (*func)()){
+void* taskflowLib::task_definition(void* namechar, void (*func)()){
+    std::string name = std::string((char*)namechar);
     tf::Taskflow *taskflow = (tf::Taskflow *) taskflow_ptr;    
     if (!taskflow) {
         return nullptr; 
