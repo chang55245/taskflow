@@ -28,4 +28,17 @@ CPLUS_INCLUDE_PATH=/home/lchang21/.vscode-server/data/User/globalStorage/llvm-vs
 /heorot/lchang21/llvm-release/llvm/bin/clang++  -g -std=c++17 /heorot/lchang21/taskflow/taskflow/taskflow-lib/test.cpp -I /heorot/lchang21/taskflow/taskflow/taskflow-lib/ -pthread lib.a -o test.exe
 
 
-/heorot/lchang21/llvm/Polygeist/build/bin/polygeist-opt test.mlir --canonicalize-polygeist  -convert-polygeist-to-llvm
+/heorot/lchang21/llvm/Polygeist/build/bin/polygeist-opt test-polygeist.mlir --canonicalize-polygeist  -convert-polygeist-to-llvm 
+
+
+/heorot/lchang21/llvm/Polygeist/llvm-project/build/bin/mlir-opt -lower-affine -finalize-memref-to-llvm -convert-arith-to-llvm test-polygeist.mlir
+
+
+
+/heorot/lchang21/llvm-release/llvm/bin/clang++ -fPIC -shared -std=c++17 /heorot/lchang21/taskflow/taskflow/taskflow-lib/lib.cpp -I /heorot/lchang21/taskflow/taskflow/ -pthread -o lib.so
+
+
+/heorot/lchang21/llvm-release/llvm/bin/clang++  -g -std=c++17 /heorot/lchang21/taskflow/taskflow/taskflow-lib/test.cpp -I /heorot/lchang21/taskflow/taskflow/taskflow-lib/ -pthread -Wl,-rpath,/heorot/lchang21/taskflow/taskflow/taskflow-lib/ -L/heorot/lchang21/taskflow/taskflow/taskflow-lib/lib.so lib.so -o test.exe
+
+
+/heorot/lchang21/llvm/Polygeist/llvm-project/build/bin/mlir-cpu-runner ./test-llvm.mlir -O3 -e main -entry-point-result=void -shared-libs=/heorot/lchang21/llvm/Polygeist/llvm-project/build/lib/libmlir_runner_utils.so,/heorot/lchang21/llvm/Polygeist/llvm-project/build/lib/libmlir_c_runner_utils.so,/heorot/lchang21/taskflow/taskflow/taskflow-lib/lib.so
