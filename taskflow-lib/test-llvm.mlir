@@ -1,12 +1,12 @@
-module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu"} {
+module attributes {dlti.dl_spec = #dlti.dl_spec<#dlti.dl_entry<f64, dense<64> : vector<2xi32>>, #dlti.dl_entry<!llvm.ptr<270>, dense<32> : vector<4xi32>>, #dlti.dl_entry<f128, dense<128> : vector<2xi32>>, #dlti.dl_entry<f16, dense<16> : vector<2xi32>>, #dlti.dl_entry<i32, dense<32> : vector<2xi32>>, #dlti.dl_entry<i64, dense<64> : vector<2xi32>>, #dlti.dl_entry<!llvm.ptr<271>, dense<32> : vector<4xi32>>, #dlti.dl_entry<!llvm.ptr<272>, dense<64> : vector<4xi32>>, #dlti.dl_entry<!llvm.ptr, dense<64> : vector<4xi32>>, #dlti.dl_entry<f80, dense<128> : vector<2xi32>>, #dlti.dl_entry<i16, dense<16> : vector<2xi32>>, #dlti.dl_entry<i1, dense<8> : vector<2xi32>>, #dlti.dl_entry<i8, dense<8> : vector<2xi32>>, #dlti.dl_entry<"dlti.endianness", "little">, #dlti.dl_entry<"dlti.stack_alignment", 128 : i32>>, llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-f80:128-n8:16:32:64-S128", llvm.target_triple = "x86_64-unknown-linux-gnu", "polygeist.target-cpu" = "x86-64", "polygeist.target-features" = "+cmov,+cx8,+fxsr,+mmx,+sse,+sse2,+x87", "polygeist.tune-cpu" = "generic"} {
   llvm.mlir.global internal constant @str5("C\0A\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str4("B\0A\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str3("A\0A\00") {addr_space = 0 : i32}
-  llvm.func @printf(!llvm.ptr, ...)
+  llvm.func @printf(!llvm.ptr, ...) -> i32
   llvm.mlir.global internal constant @str2("C\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str1("B\00") {addr_space = 0 : i32}
   llvm.mlir.global internal constant @str0("A\00") {addr_space = 0 : i32}
-  llvm.func @main() {
+  llvm.func @main() -> i32 {
     %0 = llvm.mlir.constant(2 : index) : i64
     %1 = llvm.mlir.constant(1 : index) : i64
     %2 = llvm.alloca %1 x !llvm.array<2 x ptr> : (i64) -> !llvm.ptr
@@ -81,26 +81,26 @@ module attributes {llvm.data_layout = "e-m:e-p270:32:32-p271:32:32-p272:64:64-i6
     llvm.call @_ZN11taskflowLib14add_dependencyEPvS0_(%2, %63, %61) : (!llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
     llvm.call @_ZN11taskflowLib14add_dependencyEPvS0_(%2, %61, %59) : (!llvm.ptr, !llvm.ptr, !llvm.ptr) -> ()
     llvm.call @_ZN11taskflowLib7executeEv(%2) : (!llvm.ptr) -> ()
-    llvm.return
+    llvm.return %12 : i32
   }
   llvm.func @_ZN11taskflowLibC1Ev(!llvm.ptr) attributes {sym_visibility = "private"}
   llvm.func @_ZN11taskflowLib15task_definitionEPvPFvvE(!llvm.ptr, !llvm.ptr, !llvm.ptr) -> !llvm.ptr attributes {sym_visibility = "private"}
   llvm.func @_Z5funcAv() {
     %0 = llvm.mlir.addressof @str3 : !llvm.ptr
     %1 = llvm.getelementptr %0[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.array<3 x i8>
-   llvm.call @printf(%1) vararg(!llvm.func<i32 (ptr, ...)>) : (!llvm.ptr) -> ()
+    %2 = llvm.call @printf(%1) vararg(!llvm.func<i32 (ptr, ...)>) : (!llvm.ptr) -> i32
     llvm.return
   }
   llvm.func @_Z5funcBv() {
     %0 = llvm.mlir.addressof @str4 : !llvm.ptr
     %1 = llvm.getelementptr %0[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.array<3 x i8>
-    llvm.call @printf(%1) vararg(!llvm.func<i32 (ptr, ...)>) : (!llvm.ptr) -> ()
+    %2 = llvm.call @printf(%1) vararg(!llvm.func<i32 (ptr, ...)>) : (!llvm.ptr) -> i32
     llvm.return
   }
   llvm.func @_Z5funcCv() {
     %0 = llvm.mlir.addressof @str5 : !llvm.ptr
     %1 = llvm.getelementptr %0[0, 0] : (!llvm.ptr) -> !llvm.ptr, !llvm.array<3 x i8>
-    llvm.call @printf(%1) vararg(!llvm.func<i32 (ptr, ...)>) : (!llvm.ptr) -> ()
+    %2 = llvm.call @printf(%1) vararg(!llvm.func<i32 (ptr, ...)>) : (!llvm.ptr) -> i32
     llvm.return
   }
   llvm.func @_ZN11taskflowLib14add_dependencyEPvS0_(!llvm.ptr, !llvm.ptr, !llvm.ptr) attributes {sym_visibility = "private"}
