@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <string>
 #include "lib.hpp"
-
+#include <taskflow/taskflow.hpp>  // Include the full taskflow header
 
 taskflowLib::taskflowLib() : taskflow_ptr(nullptr), executor_ptr(nullptr) {
     create_taskflow();
