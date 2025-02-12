@@ -1,63 +1,78 @@
 #include <cstdio>
 #include <string>
-#include <taskflow/taskflow.hpp> 
 #include "lib.hpp"
-#include "taskflow/core/task.hpp"
 
 
-
-void taskflowLib::create_taskflow(){
-  taskflow_ptr = new tf::Taskflow();
-}
-
-void taskflowLib::create_execution(){
-  executor_ptr = new tf::Executor();
-}
-
-taskflowLib::taskflowLib(){
+taskflowLib::taskflowLib() : taskflow_ptr(nullptr), executor_ptr(nullptr) {
     create_taskflow();
-    create_execution();
+    create_executor();
+}
+
+taskflowLib::~taskflowLib() {
+    if(taskflow_ptr) {
+        delete static_cast<tf::Taskflow*>(taskflow_ptr);
+    }
+    if(executor_ptr) {
+        delete static_cast<tf::Executor*>(executor_ptr);
+    }
+}
+
+void* taskflowLib::create_taskflow() {
+    if(!taskflow_ptr) {
+        taskflow_ptr = new tf::Taskflow();
+    }
+    return taskflow_ptr;
+}
+
+void* taskflowLib::create_executor() {
+    if(!executor_ptr) {
+        executor_ptr = new tf::Executor();
+    }
+    return executor_ptr;
 }
 
 // task definition
-void* taskflowLib::task_definition(void* namechar, void (*func)()){
-    std::string name = std::string((char*)namechar);
-    tf::Taskflow *taskflow = (tf::Taskflow *) taskflow_ptr;    
-    if (!taskflow) {
-        return nullptr; 
-    }
+void* taskflowLib::task_definition(const char* namechar, void (*func)()) {
+    tf::Taskflow* taskflow = static_cast<tf::Taskflow*>(taskflow_ptr);
+    if(!taskflow) return nullptr;
+
+    std::string name = namechar ? std::string(namechar) : "";
     auto task = taskflow->emplace(func).name(name);
-    // copy the task to the heap
-    auto t = new tf::Task(task);
-  
-    return (void*) t;
+    return new tf::Task(task);
 }
+
 // dependency definition
-void taskflowLib::add_dependency(void* prev, void* next){
-    tf::Task *t1 = (tf::Task*) (prev);
-    tf::Task *t2 = (tf::Task*) (next);
-    t1->precede(*t2);
+void taskflowLib::add_dependency(void* prev, void* next) {
+    if(!prev || !next) return;
+    
+    auto task1 = static_cast<tf::Task*>(prev);
+    auto task2 = static_cast<tf::Task*>(next);
+    task1->precede(*task2);
 }
 
 // execution
-void taskflowLib::execute(){
-    tf::Taskflow *taskflow = (tf::Taskflow *) taskflow_ptr;
-    tf::Executor *executor = (tf::Executor *) executor_ptr;
-    executor->run(*taskflow).wait();
+void taskflowLib::execute() {
+    auto taskflow = static_cast<tf::Taskflow*>(taskflow_ptr);
+    auto executor = static_cast<tf::Executor*>(executor_ptr);
+    if(taskflow && executor) {
+        executor->run(*taskflow).wait();
+    }
 }
 
-// int main(){
-  
-//     auto myTaskflowLib = taskflowLib();
+void taskflowLib::set_name(const char* name) {
+    if(!taskflow_ptr || !name) return;
+    auto taskflow = static_cast<tf::Taskflow*>(taskflow_ptr);
+    taskflow->name(name);
+}
 
-//     auto A = myTaskflowLib.task_definition("A", [](){printf("A\n");});
-//     auto B = myTaskflowLib.task_definition("B", [](){printf("B\n");});
-//     auto C = myTaskflowLib.task_definition("C", [](){printf("C\n");});
+int taskflowLib::num_tasks() {
+    if(!taskflow_ptr) return 0;
+    auto taskflow = static_cast<tf::Taskflow*>(taskflow_ptr);
+    return static_cast<int>(taskflow->num_tasks());
+}
 
-//     myTaskflowLib.add_dependency(C, B);
-//     myTaskflowLib.add_dependency(B, A);
-
-//     myTaskflowLib.execute();    
-
-//   return 0;
-// }
+bool taskflowLib::is_empty() {
+    if(!taskflow_ptr) return true;
+    auto taskflow = static_cast<tf::Taskflow*>(taskflow_ptr);
+    return taskflow->empty();
+}

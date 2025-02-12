@@ -1,5 +1,8 @@
 /build
 *.cache/
 *.o
+*.so
 *.ll
 *.exe
+
+/taskflow-lib/build

@@ -1,70 +1,42 @@
+#include <iostream>
 #include "lib.hpp"
 
-void funcA() { 
-    int firstMatrix[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-        int secondMatrix[3][3] = {{9, 8, 7}, {6, 5, 4}, {3, 2, 1}};
-        int result[3][3];
-        int rowFirst = 3, columnFirst = 3, rowSecond = 3, columnSecond = 3;
-        for (int i = 0; i < rowFirst; ++i) {
-            for (int j = 0; j < columnSecond; ++j) {
-                result[i][j] = 0;
-            }
-        }
+// Task function declarations
+void taskA() { std::cout << "Executing Task A\n"; }
+void taskB() { std::cout << "Executing Task B\n"; }
+void taskC() { std::cout << "Executing Task C\n"; }
+void taskD() { std::cout << "Executing Task D\n"; }
 
-        // Multiplying firstMatrix and secondMatrix and storing in result.
-        for (int i = 0; i < rowFirst; ++i) {
-            for (int j = 0; j < columnSecond; ++j) {
-                for (int k = 0; k < columnFirst; ++k) {
-                    result[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
-                }
-            }
-        }
-        printf("A\n"); 
-}
-
-void funcB() {
-        
-     printf("B\n"); 
-     }
-
-void funcC() { printf("C\n"); }
 int main() {
-    char nameA[] = "A";
-    char nameB[] = "B";
-    char nameC[] = "C";
-
-    auto myTaskflowLib = taskflowLib();
-    auto A = myTaskflowLib.task_definition(nameA, funcA);
-    // auto B = myTaskflowLib.task_definition(nameB, funcB);
-
-    auto B = myTaskflowLib.task_definition(nameB, []() {
-        int firstMatrix[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 9}};
-
-       
-        int secondMatrix[3][3] = {{9, 8, 7}, {6, 5, 4}, {3, 2, 1}};
-        int result[3][3];
-        
-        int rowFirst = 3, columnFirst = 3, rowSecond = 3, columnSecond = 3;
-        for (int i = 0; i < rowFirst; ++i) {
-            for (int j = 0; j < columnSecond; ++j) {
-                result[i][j] = 0;
-            }
-        }
-
-
-        for (int i = 0; i < rowFirst; ++i) {
-            for (int j = 0; j < columnSecond; ++j) {
-                for (int k = 0; k < columnFirst; ++k) {
-                    result[i][j] += firstMatrix[i][k] * secondMatrix[k][j];
-                }
-            }
-        }
-        printf("B\n");
-    });
-    auto C = myTaskflowLib.task_definition(nameC, funcC);
-    // auto C = myTaskflowLib.task_definition(nameC, [](){printf("C\n");});
-    myTaskflowLib.add_dependency(C, B);
-    myTaskflowLib.add_dependency(B, A);
-
-    myTaskflowLib.execute();
+    // Create taskflow library instance
+    taskflowLib tf;
+    
+    // Create tasks
+    void* A = tf.task_definition("A", taskA);
+    void* B = tf.task_definition("B", taskB);
+    void* C = tf.task_definition("C", taskC);
+    void* D = tf.task_definition("D", taskD);
+    
+    // Add dependencies
+    // A -> B -> D
+    //   -> C ->
+    tf.add_dependency(A, B);  // A runs before B
+    tf.add_dependency(A, C);  // A runs before C
+    tf.add_dependency(B, D);  // B runs before D
+    tf.add_dependency(C, D);  // C runs before D
+    
+    // Print task information
+    std::cout << "Number of tasks: " << tf.num_tasks() << "\n";
+    std::cout << "Is taskflow empty? " << (tf.is_empty() ? "yes" : "no") << "\n";
+    
+    std::cout << "\nExecuting taskflow...\n";
+    std::cout << "-------------------\n";
+    
+    // Execute the taskflow
+    tf.execute();
+    
+    std::cout << "-------------------\n";
+    std::cout << "Execution complete!\n";
+    
+    return 0;
 }

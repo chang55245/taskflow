@@ -1,14 +1,32 @@
-#include <cstdio>
+#pragma once
+#include <taskflow/taskflow.hpp>  // Include the full taskflow header
+
+// Forward declarations
+namespace tf {
+    class Taskflow;
+    class Executor;
+    class Task;
+}
+
 class taskflowLib {
 public:
-    void create_taskflow();
-    void create_execution();
-    // void *task_definition(std::string name, void (*func)());
-    void *task_definition(void* name, void (*func)());
+    // Constructor/Destructor
+    taskflowLib();
+    ~taskflowLib();
+
+    // Core API
+    void* create_taskflow();
+    void* create_executor();
+    void* task_definition(const char* name, void (*func)());
     void add_dependency(void* prev, void* next);
     void execute();
 
-    void * taskflow_ptr;
-    void * executor_ptr;
-    taskflowLib();
+    // Optional API
+    void set_name(const char* name);
+    int num_tasks();
+    bool is_empty();
+
+private:
+    void* taskflow_ptr;
+    void* executor_ptr;
 };
