@@ -1,7 +1,7 @@
 # standalone executable
-/heorot/lchang21/llvm-release/llvm/bin/clang++ -g -std=c++17 /heorot/lchang21/taskflow/taskflow/test-apps-dev/simple.cpp -I /heorot/lchang21/taskflow/taskflow/ -pthread -o simple.exe
+/heorot/lchang21/llvm-release/llvm/bin/clang++ -g -std=c++17 /heorot/lchang21/taskflow/taskflow/test-apps-dev/simple.cpp -I /heorot/lchang21/taskflow/taskflow/  -o simple.exe
 
-/heorot/lchang21/llvm-release/llvm/bin/clang++ -g -std=c++11 /heorot/lchang21/taskflow/taskflow/test-apps-dev/simple.cpp -I /heorot/lchang21/taskflow/taskflow/ -pthread -o simple.exe
+/heorot/lchang21/llvm-release/llvm/bin/clang++ -g -std=c++17 /heorot/lchang21/taskflow/taskflow/test-apps-dev/simple.cpp -I /heorot/lchang21/taskflow/taskflow/ 
 
 #show ast, in command line
 
