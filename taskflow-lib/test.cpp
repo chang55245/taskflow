@@ -1,42 +1,36 @@
-#include <iostream>
+#include <stdio.h>
 #include "lib.hpp"
 
 // Task function declarations
-void taskA() { std::cout << "Executing Task A\n"; }
-void taskB() { std::cout << "Executing Task B\n"; }
-void taskC() { std::cout << "Executing Task C\n"; }
-void taskD() { std::cout << "Executing Task D\n"; }
+void taskA() { printf("Executing Task A\n"); }
+void taskB() { printf("Executing Task B\n"); }
+void taskC() { printf("Executing Task C\n"); }
+void taskD() { printf("Executing Task D\n"); }
 
 int main() {
-    // Create taskflow library instance
-    taskflowLib tf;
+    TaskflowLib* tf = taskflow_create();
     
-    // Create tasks
-    void* A = tf.task_definition("A", taskA);
-    void* B = tf.task_definition("B", taskB);
-    void* C = tf.task_definition("C", taskC);
-    void* D = tf.task_definition("D", taskD);
+    TaskWrapper* A = taskflow_create_task(tf, "A", taskA);
+    TaskWrapper* B = taskflow_create_task(tf, "B", taskB);
+    TaskWrapper* C = taskflow_create_task(tf, "C", taskC);
+    TaskWrapper* D = taskflow_create_task(tf, "D", taskD);
     
-    // Add dependencies
-    // A -> B -> D
-    //   -> C ->
-    tf.add_dependency(A, B);  // A runs before B
-    tf.add_dependency(A, C);  // A runs before C
-    tf.add_dependency(B, D);  // B runs before D
-    tf.add_dependency(C, D);  // C runs before D
+    taskflow_add_dependency(A, B);
+    taskflow_add_dependency(A, C);
+    taskflow_add_dependency(B, D);
+    taskflow_add_dependency(C, D);
     
-    // Print task information
-    std::cout << "Number of tasks: " << tf.num_tasks() << "\n";
-    std::cout << "Is taskflow empty? " << (tf.is_empty() ? "yes" : "no") << "\n";
+    printf("Number of tasks: %d\n", taskflow_num_tasks(tf));
+    printf("Is taskflow empty? %s\n", taskflow_is_empty(tf) ? "yes" : "no");
     
-    std::cout << "\nExecuting taskflow...\n";
-    std::cout << "-------------------\n";
+    printf("\nExecuting taskflow...\n");
+    printf("-------------------\n");
     
-    // Execute the taskflow
-    tf.execute();
+    taskflow_execute(tf);
     
-    std::cout << "-------------------\n";
-    std::cout << "Execution complete!\n";
+    printf("-------------------\n");
+    printf("Execution complete!\n");
     
+    taskflow_destroy(tf);
     return 0;
 }
