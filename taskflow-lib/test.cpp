@@ -1,36 +1,41 @@
 #include <stdio.h>
 #include "lib.hpp"
 
-// Task function declarations
-void taskA() { printf("Executing Task A\n"); }
-void taskB() { printf("Executing Task B\n"); }
-void taskC() { printf("Executing Task C\n"); }
-void taskD() { printf("Executing Task D\n"); }
+void task_with_multiple_args(TaskArgs* args) {
+    // Access arguments as pointers
+    int* int_ptr = (int*)args->args[0].ptr;
+    float* float_ptr = (float*)args->args[1].ptr;
+    const char* str_ptr = (const char*)args->args[2].ptr;
+    int* array_ptr = (int*)args->args[3].ptr;
+    
+    printf("Int value: %d\n", *int_ptr);
+    printf("Float value: %.2f\n", *float_ptr);
+    printf("String: %s\n", str_ptr);
+    printf("Array values: %d, %d, %d\n", array_ptr[0], array_ptr[1], array_ptr[2]);
+}
 
 int main() {
     TaskflowLib* tf = taskflow_create();
     
-    TaskWrapper* A = taskflow_create_task(tf, "A", taskA);
-    TaskWrapper* B = taskflow_create_task(tf, "B", taskB);
-    TaskWrapper* C = taskflow_create_task(tf, "C", taskC);
-    TaskWrapper* D = taskflow_create_task(tf, "D", taskD);
+    // Create task arguments
+    int value = 42;
+    float pi = 3.14159f;
+    const char* message = "Hello";
+    int array[] = {1, 2, 3};
     
-    taskflow_add_dependency(A, B);
-    taskflow_add_dependency(A, C);
-    taskflow_add_dependency(B, D);
-    taskflow_add_dependency(C, D);
+    TaskArgs* args = create_task_args(4);
+    set_task_arg_ptr(args, 0, &value);
+    set_task_arg_ptr(args, 1, &pi);
+    set_task_arg_ptr(args, 2, (void*)message);
+    set_task_arg_ptr(args, 3, array);
     
-    printf("Number of tasks: %d\n", taskflow_num_tasks(tf));
-    printf("Is taskflow empty? %s\n", taskflow_is_empty(tf) ? "yes" : "no");
-    
-    printf("\nExecuting taskflow...\n");
-    printf("-------------------\n");
+    TaskWrapper* task = taskflow_create_task(tf, "multi_arg_task", task_with_multiple_args, args);
     
     taskflow_execute(tf);
     
-    printf("-------------------\n");
-    printf("Execution complete!\n");
-    
+    // Cleanup
+    destroy_task_args(args);
     taskflow_destroy(tf);
+    
     return 0;
 }
