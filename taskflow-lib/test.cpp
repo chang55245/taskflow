@@ -112,8 +112,8 @@ int main() {
     TaskWrapper* task5 = taskflow_create_task(tf, "final_task", final_task, args5);
     
     // Add dependencies
-    taskflow_add_dependency(task1, task2);  // math_task -> string_task
-    taskflow_add_dependency(task2, task3);  // string_task -> array_task
+    taskflow_add_dependency(task1, task5);  // math_task -> string_task
+    taskflow_add_dependency(task2, task5);  // string_task -> array_task
     taskflow_add_dependency(task3, task5);  // array_task -> final_task
     
     // Execute taskflow
