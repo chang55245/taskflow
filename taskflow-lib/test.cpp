@@ -71,7 +71,8 @@ void malloc_wrapper(TaskArgs* args){
     malloc_func(*ptr_to_ptr);
 }
 
-void test_unintialized_pointer(void* ptr){
+void test_unintialized_pointer(void* ptr, int test_num){
+    printf("test_num: %d\n", test_num);
 
      for (int y1 = 0; y1 < 2; y1++)
     {
@@ -85,7 +86,8 @@ void test_unintialized_pointer(void* ptr){
 
 void uninitialized_pointer_wrapper(TaskArgs* args){
     void** ptr_to_ptr0 = (void**)args->args[0].ptr;
-    test_unintialized_pointer(*ptr_to_ptr0);
+    int* ptr_to_ptr1 = (int*)args->args[1].ptr;
+    test_unintialized_pointer(*ptr_to_ptr0, *ptr_to_ptr1);
 }
 
 int main() {
@@ -155,9 +157,10 @@ int main() {
 
     TaskWrapper* task5 = taskflow_create_task(tf, "malloc", malloc_wrapper, args5);
     
-
-    TaskArgs* args6 = create_task_args(1);
+    int test_num = 100;
+    TaskArgs* args6 = create_task_args(2);
     set_task_arg_ptr(args6, 0, &sum);
+    set_task_arg_ptr(args6, 1, &test_num);
 
     TaskWrapper* task6 = taskflow_create_task(tf, "uninitialized_pointer_wrapper", uninitialized_pointer_wrapper, args6);
     
