@@ -15,7 +15,7 @@ struct TaskWrapper {
 struct TaskArg {
     void* ptr;         // Pointer to any type
     void* private_copy; // Pointer to a private copy of the data
-    bool is_value;     // true if data is stored by value, false if it's a pointer
+    int size;
 };
 
 struct TaskArgs {
@@ -30,9 +30,8 @@ void taskflow_destroy(TaskflowLib* tf);
 // Argument management
 TaskArgs* create_task_args(size_t num_args);
 void destroy_task_args(TaskArgs* args);
-void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr);
-void set_task_arg_value(TaskArgs* args, size_t index, void* value, size_t size);
-
+void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr, int size);
+void taskflow_copy_back(TaskArgs* args);
 // Task creation and management
 TaskWrapper* taskflow_create_task(
     TaskflowLib* tf, 

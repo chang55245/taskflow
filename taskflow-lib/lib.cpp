@@ -9,6 +9,8 @@ struct TaskflowLib {
     tf::Executor* executor;
 };
 
+
+
 extern "C" {
 
 TaskflowLib* taskflow_create() {
@@ -33,7 +35,7 @@ TaskArgs* create_task_args(size_t num_args) {
     // Initialize all args
     for(size_t i = 0; i < num_args; i++) {
         args->args[i].ptr = nullptr;
-        args->args[i].is_value = false;
+        args->args[i].size = 0;
     }
     return args;
 }
@@ -42,7 +44,7 @@ void destroy_task_args(TaskArgs* args) {
     if (args) {
         // Free any values that were stored by copy
         for(size_t i = 0; i < args->num_args; i++) {
-            if (args->args[i].is_value && args->args[i].ptr) {
+            if (args->args[i].ptr) {
                 free(args->args[i].ptr);
             }
         }
@@ -51,27 +53,27 @@ void destroy_task_args(TaskArgs* args) {
     }
 }
 
-void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr) {
+void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr, int size) {
 
     if (index >= args->num_args) return;
     // Free any existing value storage
-    if (args->args[index].is_value && args->args[index].ptr) {
+    if (args->args[index].ptr) {
         free(args->args[index].ptr);
         free(args->args[index].private_copy);
     }
     args->args[index].ptr = ptr;
-    args->args[index].is_value = false;
+    args->args[index].size = size;
 }
 
-void set_task_arg_value(TaskArgs* args, size_t index, void* value, size_t size) {
-    if (index >= args->num_args) return;
-    // Free any existing value storage
-    if (args->args[index].is_value && args->args[index].ptr) {
-        free(args->args[index].ptr);
+void taskflow_copy_back(TaskArgs* args) {
+    if (!args) return;
+    
+    for(size_t i = 0; i < args->num_args; i++) {
+        if (args->args[i].ptr && args->args[i].private_copy && args->args[i].size > 0) {
+            memcpy(args->args[i].ptr, args->args[i].private_copy, args->args[i].size);
+        }
+        free(args->args[i].private_copy);
     }
-    args->args[index].ptr = malloc(size);
-    memcpy(args->args[index].ptr, value, size);
-    args->args[index].is_value = true;
 }
 
 TaskWrapper* taskflow_create_task(
@@ -85,23 +87,19 @@ TaskWrapper* taskflow_create_task(
     // Deep copy of arguments
     TaskArgs* args_copy = create_task_args(args->num_args);
     for(size_t i = 0; i < args->num_args; i++) {
-        if (args->args[i].is_value) {
-            // For values stored by copy, make a new copy
-            args_copy->args[i].ptr = malloc(sizeof(void*));
-            memcpy(args_copy->args[i].ptr, args->args[i].ptr, sizeof(void*));
-            args_copy->args[i].is_value = true;
-        } else {
-            // For pointers, just copy the pointer
-            args_copy->args[i].ptr = args->args[i].ptr;
-            args_copy->args[i].private_copy = malloc(sizeof(void*));
-            memcpy(args_copy->args[i].private_copy, args->args[i].ptr, sizeof(void*));
-            args_copy->args[i].is_value = false;
-        }
+        
+        // For pointers, just copy the pointer
+        args_copy->args[i].ptr = args->args[i].ptr;
+        args_copy->args[i].private_copy = malloc(args->args[i].size);
+        memcpy(args_copy->args[i].private_copy, args->args[i].ptr, args->args[i].size);
+        args_copy->args[i].size = args->args[i].size;
+        
     }
     
-    auto task = tf->taskflow->emplace([func, args_copy]() {
+    auto task = tf->taskflow->emplace([func,name, args_copy]() {
+        printf("running task:%s \n",name);
         func(args_copy);
-        destroy_task_args(args_copy);
+        printf("task %s finished\n", name);
     });
     
     if (name) {

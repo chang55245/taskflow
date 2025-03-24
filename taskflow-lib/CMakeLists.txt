@@ -5,6 +5,10 @@ project(taskflow_test)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Enable debug build
+set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g")
+
 # Find taskflow
 set(TASKFLOW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../") # Adjust this path as needed
 

@@ -62,27 +62,23 @@
 //     printf("Final task: result = %d\n", *final_result);
 // }
 
-void malloc_func(void* ptr){
+void malloc_func(void* ptr, int* test_num){
     printf("test malloc_func\n"); 
-    printf("malloc_func: %p\n", ptr);
+    printf("test_num: %d\n", *test_num);
     *(void**)ptr = malloc(sizeof(int)*100);
+    *test_num = 100;
     printf("malloc_func after malloc: %p\n", *(void**)ptr);
 }
 
 void malloc_wrapper(TaskArgs* args){
-    void** original_ptr = (void**)args->args[0].ptr;
-    void** private_copy = (void**)args->args[0].private_copy;
-    
-    // Don't dereference private_copy yet
-    printf("private_copy address: %p\n", private_copy);
-    printf("original_ptr address: %p\n", original_ptr);
-    
-    malloc_func(private_copy);  // This will allocate memory and store it in *private_copy
-    memcpy(original_ptr, private_copy, sizeof(void*));
-    free(private_copy);
 
-    
-    printf("After malloc - original_ptr points to: %p\n", *original_ptr);
+    void** private_copy = (void**)args->args[0].private_copy;
+    int* test_num = (int*)args->args[1].private_copy;
+    printf("private_copy address: %p\n", private_copy);
+    printf("test_num address: %p\n", test_num);
+    malloc_func(private_copy, test_num);  // This will allocate memory and store it in *private_copy
+    taskflow_copy_back(args);
+
 }
 
 void test_unintialized_pointer(void* ptr, int test_num){
@@ -167,15 +163,21 @@ int main() {
     // printf("sum_original: %p\n", sum_original);
 
     void *sum = NULL;
-    TaskArgs* args5 = create_task_args(1);
+    int test_num = 10;
+    TaskArgs* args5 = create_task_args(2);
 
-
+    int size = sizeof(void*);
     // Pass the address of sum and our private copy
-    set_task_arg_ptr(args5, 0, &sum);
+    set_task_arg_ptr(args5, 0, &sum, size);
+    set_task_arg_ptr(args5, 1, &test_num, sizeof(int));
 
-    TaskWrapper* task5 = taskflow_create_task(tf, "malloc", malloc_wrapper, args5);
+    TaskWrapper* task5 = taskflow_create_task(tf, "11", malloc_wrapper, args5);
+
     
-
+    TaskWrapper* task6 = taskflow_create_task(tf, "222", malloc_wrapper, args5);
+    taskflow_execute(tf);
+    printf("sum:2 %p\n", sum);
+    printf("test_num: %d\n", test_num);
     // TaskArgs* args6 = create_task_args(2);
     
     // set_task_arg_ptr(args6, 0, &sum, NULL);
@@ -201,7 +203,7 @@ int main() {
     // Execute taskflow
     // printf("\nExecuting taskflow...\n");
     // printf("-------------------\n");
-    taskflow_execute(tf);
+    
     // printf("-------------------\n");
     // printf("Results:\n");
     // printf("Math result: %d\n", math_result);
