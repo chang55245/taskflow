@@ -65,15 +65,15 @@
 void malloc_func1(void* ptr, int* test_num) {
     printf("test number before 1: %d\n", *test_num);
     // int* ptr_to_ptr = (int*)ptr;
-    ptr =(int*) malloc(sizeof(int)*100);
+    // ptr =(int*) malloc(sizeof(int)*100);
     *test_num = 100;
     printf("test number after 1: %d\n", *test_num);
 }
 
 void malloc_func2(void* ptr, int* test_num) {
     printf("test number before 2: %d\n", *test_num);
-    int* ptr_to_ptr = (int*)ptr;
-    ptr_to_ptr[3] = 100;
+    // int* ptr_to_ptr = (int*)ptr;
+    // ptr_to_ptr[3] = 100;
     *test_num = 200;
     printf("test number after 2: %d\n", *test_num);
 }
@@ -199,8 +199,8 @@ int main() {
     TaskWrapper* task6 = taskflow_create_task(tf, "222", malloc_wrapper2, args5);
     
     taskflow_execute(tf);
-    int* sum_ptr = (int*)sum;
-    printf("sum: %d\n", sum_ptr[3]);
+    // int* sum_ptr = (int*)sum;
+    // printf("sum: %d\n", sum_ptr[3]);
     printf("test_num: %d\n", test_num);
     
     
