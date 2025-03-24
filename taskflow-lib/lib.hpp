@@ -14,6 +14,7 @@ struct TaskWrapper {
 // Simple argument structure
 struct TaskArg {
     void* ptr;         // Pointer to any type
+    void* private_copy; // Pointer to a private copy of the data
     bool is_value;     // true if data is stored by value, false if it's a pointer
 };
 

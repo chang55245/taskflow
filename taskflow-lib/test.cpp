@@ -63,12 +63,26 @@
 // }
 
 void malloc_func(void* ptr){
+    printf("test malloc_func\n"); 
+    printf("malloc_func: %p\n", ptr);
     *(void**)ptr = malloc(sizeof(int)*100);
+    printf("malloc_func after malloc: %p\n", *(void**)ptr);
 }
 
 void malloc_wrapper(TaskArgs* args){
-    void** ptr_to_ptr = (void**)args->args[0].ptr;
-    malloc_func(*ptr_to_ptr);
+    void** original_ptr = (void**)args->args[0].ptr;
+    void** private_copy = (void**)args->args[0].private_copy;
+    
+    // Don't dereference private_copy yet
+    printf("private_copy address: %p\n", private_copy);
+    printf("original_ptr address: %p\n", original_ptr);
+    
+    malloc_func(private_copy);  // This will allocate memory and store it in *private_copy
+    memcpy(original_ptr, private_copy, sizeof(void*));
+    free(private_copy);
+
+    
+    printf("After malloc - original_ptr points to: %p\n", *original_ptr);
 }
 
 void test_unintialized_pointer(void* ptr, int test_num){
@@ -85,9 +99,13 @@ void test_unintialized_pointer(void* ptr, int test_num){
 }
 
 void uninitialized_pointer_wrapper(TaskArgs* args){
-    void** ptr_to_ptr0 = (void**)args->args[0].ptr;
+    void* original_ptr = *(void**)args->args[0].ptr;
     int* ptr_to_ptr1 = (int*)args->args[1].ptr;
-    test_unintialized_pointer(*ptr_to_ptr0, *ptr_to_ptr1);
+    printf("original_ptr2222: %p\n", original_ptr);
+    test_unintialized_pointer(original_ptr, *ptr_to_ptr1);
+    *(void**)args->args[0].ptr = original_ptr;
+    *(int*)args->args[1].ptr = *ptr_to_ptr1;
+    printf("original_ptr3333: %p\n", original_ptr);
 }
 
 int main() {
@@ -148,25 +166,26 @@ int main() {
 
     // printf("sum_original: %p\n", sum_original);
 
-    void *sum;
+    void *sum = NULL;
     TaskArgs* args5 = create_task_args(1);
 
-    void *sum2 = &sum;
-    void **sum3 = &sum2;
-    set_task_arg_ptr(args5, 0, sum3);
+
+    // Pass the address of sum and our private copy
+    set_task_arg_ptr(args5, 0, &sum);
 
     TaskWrapper* task5 = taskflow_create_task(tf, "malloc", malloc_wrapper, args5);
     
-    int test_num = 100;
-    TaskArgs* args6 = create_task_args(2);
-    set_task_arg_ptr(args6, 0, &sum);
-    set_task_arg_ptr(args6, 1, &test_num);
 
-    TaskWrapper* task6 = taskflow_create_task(tf, "uninitialized_pointer_wrapper", uninitialized_pointer_wrapper, args6);
+    // TaskArgs* args6 = create_task_args(2);
+    
+    // set_task_arg_ptr(args6, 0, &sum, NULL);
+
+
+    // TaskWrapper* task6 = taskflow_create_task(tf, "uninitialized_pointer_wrapper", uninitialized_pointer_wrapper, args6);
     
     
-    // taskflow_add_dependency(task4, task5);
-    taskflow_add_dependency(task5, task6);
+    // // taskflow_add_dependency(task4, task5);
+    // taskflow_add_dependency(task5, task6);
 
     // // Create tasks with wrapper functions
     // TaskWrapper* task1 = taskflow_create_task(tf, "math_task", math_task_wrapper, math_args);

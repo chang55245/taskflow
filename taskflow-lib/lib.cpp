@@ -52,10 +52,12 @@ void destroy_task_args(TaskArgs* args) {
 }
 
 void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr) {
+
     if (index >= args->num_args) return;
     // Free any existing value storage
     if (args->args[index].is_value && args->args[index].ptr) {
         free(args->args[index].ptr);
+        free(args->args[index].private_copy);
     }
     args->args[index].ptr = ptr;
     args->args[index].is_value = false;
@@ -91,6 +93,8 @@ TaskWrapper* taskflow_create_task(
         } else {
             // For pointers, just copy the pointer
             args_copy->args[i].ptr = args->args[i].ptr;
+            args_copy->args[i].private_copy = malloc(sizeof(void*));
+            memcpy(args_copy->args[i].private_copy, args->args[i].ptr, sizeof(void*));
             args_copy->args[i].is_value = false;
         }
     }
