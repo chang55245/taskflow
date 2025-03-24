@@ -1,5 +1,15 @@
 {
+    
     "configurations": [
+
+        {
+            "name": "lldb taskflow",
+            "type": "lldb",
+            "request": "launch",
+            "program": "/heorot/lchang21/taskflow/taskflow/taskflow-lib/build/test_taskflow",
+            "args": [],
+            "cwd": "${workspaceFolder}/taskflow-lib/build"
+        },
     {
         "name": "(gdb) Launch",
         "type": "cppdbg",
