@@ -90,7 +90,7 @@ void malloc_wrapper1(TaskArgs* args) {
     printf("  args[1].ptr: %p\n", args->args[1].ptr);
     printf("  args[1].private_copy: %p\n", args->args[1].private_copy);
 
-    void** private_copy = (void**)args->args[0].private_copy;
+    void*** private_copy = (void***)args->args[0].private_copy;
     int** test_num = (int**)args->args[1].private_copy;
     
     printf("Wrapper1 before func:\n");
@@ -100,7 +100,7 @@ void malloc_wrapper1(TaskArgs* args) {
     printf("  test_num ptr value: %p\n", *test_num);
     printf("  test_num value: %d\n", **test_num);
     
-    malloc_func1(private_copy, *test_num);
+    malloc_func1(*private_copy, *test_num);
     
     printf("Wrapper1 after func:\n");
     printf("  private_copy addr: %p\n", private_copy);
@@ -159,13 +159,14 @@ void malloc_wrapper2(TaskArgs* args) {
 int main() {
     TaskflowLib* tf = taskflow_create();
     
-    void *sum = NULL;
+    void *sum= NULL;
+    void **sum_ptr = &sum;
     int test_num = 10;
     int *test_num_ptr = &test_num;
     
     // Args for first task
     TaskArgs* args5 = create_task_args(2);
-    set_task_arg_ptr(args5, 0, &sum, sizeof(int) * 100);
+    set_task_arg_ptr(args5, 0, &sum_ptr, sizeof(void**));
     set_task_arg_ptr(args5, 1, &test_num_ptr, sizeof(int));
     
     // Create first task
