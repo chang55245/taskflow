@@ -35,6 +35,7 @@ TaskArgs* create_task_args(size_t num_args) {
     // Initialize all args
     for(size_t i = 0; i < num_args; i++) {
         args->args[i].ptr = nullptr;
+        args->args[i].private_copy = nullptr;
         args->args[i].size = 0;
     }
     return args;
@@ -65,17 +66,34 @@ void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr, int size) {
 }
 
 void taskflow_copy_back(TaskArgs* args) {
-    if (!args) return;
-    
+    printf("\nCopy back entry:\n");
     for(size_t i = 0; i < args->num_args; i++) {
-        if (args->args[i].ptr && args->args[i].private_copy && args->args[i].size > 0) {
-            // For pointer to pointer, we need to handle differently
-            void* dst_ptr = *(void**)args->args[i].ptr;
-            void* src_ptr = *(void**)args->args[i].private_copy;
-            if (dst_ptr != NULL && src_ptr != NULL) {
-                memcpy(dst_ptr, src_ptr, args->args[i].size);
-                free(src_ptr);
+        printf("Arg %zu:\n", i);
+        printf("  ptr: %p\n", args->args[i].ptr);
+        printf("  private_copy: %p\n", args->args[i].private_copy);
+        printf("  size: %d\n", args->args[i].size);
+
+        if (args->args[i].ptr && args->args[i].private_copy) {
+            void** dst = (void**)args->args[i].ptr;
+            void** src = (void**)args->args[i].private_copy;
+            
+            printf("  dst addr: %p, value: %p\n", dst, *dst);
+            printf("  src addr: %p, value: %p\n", src, *src);
+            
+            if (*src != NULL) {
+                if (*dst == NULL) {
+                    *dst = malloc(args->args[i].size);
+                    printf("  Allocated new dst memory: %p\n", *dst);
+                }
+                memcpy(*dst, *src, args->args[i].size);
+                printf("  Copied %d bytes from %p to %p\n", args->args[i].size, *src, *dst);
             }
+            
+            if (*src) {
+                printf("  Freeing src data: %p\n", *src);
+                free(*src);
+            }
+            printf("  Freeing private copy container: %p\n", args->args[i].private_copy);
             free(args->args[i].private_copy);
             args->args[i].private_copy = NULL;
         }
@@ -90,26 +108,30 @@ TaskWrapper* taskflow_create_task(
 ) {
     if (!tf || !tf->taskflow) return nullptr;
     
-    // Deep copy of arguments
     TaskArgs* args_copy = create_task_args(args->num_args);
     for(size_t i = 0; i < args->num_args; i++) {
-        args_copy->args[i].ptr = args->args[i].ptr;
-        args_copy->args[i].size = args->args[i].size;
+        // Copy all fields
+        args_copy->args[i].ptr = args->args[i].ptr;  // Original pointer
+        args_copy->args[i].size = args->args[i].size;  // Size
         
-        // First, allocate memory for the pointer itself
+        printf("Creating task %s - arg %zu:\n", name, i);
+        printf("  Original ptr: %p\n", args->args[i].ptr);
+        printf("  Size: %d\n", args->args[i].size);
+
         void* dst = malloc(sizeof(void*));
-        memcpy(dst, args->args[i].ptr, sizeof(void*));
+        *(void**)dst = NULL;
         
-        // If this is a pointer to a pointer, we need to also copy what it points to
-        void* src_ptr = *(void**)args->args[i].ptr;
-        if (src_ptr != NULL) {
-            // For pointer-to-pointer, we need to copy the pointed-to value
-            void* new_data = malloc(args->args[i].size);  // Size of what it points to
-            memcpy(new_data, src_ptr, args->args[i].size);  // Copy the actual value
-            *(void**)dst = new_data;
+        if (args->args[i].ptr != NULL) {
+            *(void**)dst = malloc(args->args[i].size);
+            if (*(void**)args->args[i].ptr != NULL) {
+                memcpy(*(void**)dst, *(void**)args->args[i].ptr, args->args[i].size);
+                printf("  Copied data from %p to %p\n", *(void**)args->args[i].ptr, *(void**)dst);
+            }
         }
         
         args_copy->args[i].private_copy = dst;
+        printf("  Private copy container: %p\n", dst);
+        printf("  Private copy value: %p\n", *(void**)dst);
     }
     
     auto task = tf->taskflow->emplace([func,name, args_copy]() {
