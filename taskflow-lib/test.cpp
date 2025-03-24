@@ -62,47 +62,70 @@
 //     printf("Final task: result = %d\n", *final_result);
 // }
 
-void malloc_func(void* ptr, int* test_num){
-    printf("test malloc_func\n"); 
-    printf("test_num: %d\n", *test_num);
-    *(void**)ptr = malloc(sizeof(int)*100);
+void malloc_func1(void* ptr, int* test_num) {
+    printf("test number before 1: %d\n", *test_num);
+    // int* ptr_to_ptr = (int*)ptr;
+    ptr =(int*) malloc(sizeof(int)*100);
     *test_num = 100;
-    printf("malloc_func after malloc: %p\n", *(void**)ptr);
+    printf("test number after 1: %d\n", *test_num);
 }
 
-void malloc_wrapper(TaskArgs* args){
+void malloc_func2(void* ptr, int* test_num) {
+    printf("test number before 2: %d\n", *test_num);
+    int* ptr_to_ptr = (int*)ptr;
+    ptr_to_ptr[3] = 100;
+    *test_num = 200;
+    printf("test number after 2: %d\n", *test_num);
+}
 
+void malloc_wrapper1(TaskArgs* args) {
     void** private_copy = (void**)args->args[0].private_copy;
-    int* test_num = (int*)args->args[1].private_copy;
-    printf("private_copy address: %p\n", private_copy);
-    printf("test_num address: %p\n", test_num);
-    malloc_func(private_copy, test_num);  // This will allocate memory and store it in *private_copy
+    int** test_num = (int**)args->args[1].private_copy;
+    // int** org_ptr = (int**)args->args[1].ptr;
+    // printf("org ptr address 1: %p\n", org_ptr);
+    // printf("org ptr address 1 1: %p\n", *org_ptr);
+    // printf("private_copy address 1: %p\n", test_num);
+    // printf("private_copy address 1 1: %p\n", *test_num);
+    malloc_func1(*private_copy, *test_num);
     taskflow_copy_back(args);
-
+    // printf("copy back 1\n");
 }
 
-void test_unintialized_pointer(void* ptr, int test_num){
-    printf("test_num: %d\n", test_num);
-
-     for (int y1 = 0; y1 < 2; y1++)
-    {
-      for (int z = 0; z < 2; z++)
-      {
-        ((int*)ptr)[z] = y1+z;
-        printf("y1: %d, z: %d\n",y1, ((int*)ptr)[z]);
-      }
-    }
+void malloc_wrapper2(TaskArgs* args) {
+    void** private_copy = (void**)args->args[0].private_copy;
+    int** test_num = (int**)args->args[1].private_copy;
+    // int** org_ptr = (int**)args->args[1].ptr;
+    // printf("org ptr address 2: %p\n", org_ptr);
+    // printf("org ptr address 2 2: %p\n", *org_ptr);
+    // printf("private_copy address 2: %p\n", test_num);
+    // printf("private_copy address 2 2: %p\n", *test_num);
+    malloc_func2(*private_copy, *test_num);
+    taskflow_copy_back(args);
+    // printf("copy back 2\n");
 }
 
-void uninitialized_pointer_wrapper(TaskArgs* args){
-    void* original_ptr = *(void**)args->args[0].ptr;
-    int* ptr_to_ptr1 = (int*)args->args[1].ptr;
-    printf("original_ptr2222: %p\n", original_ptr);
-    test_unintialized_pointer(original_ptr, *ptr_to_ptr1);
-    *(void**)args->args[0].ptr = original_ptr;
-    *(int*)args->args[1].ptr = *ptr_to_ptr1;
-    printf("original_ptr3333: %p\n", original_ptr);
-}
+// void test_unintialized_pointer(void* ptr, int test_num){
+//     printf("test_num: %d\n", test_num);
+
+//      for (int y1 = 0; y1 < 2; y1++)
+//     {
+//       for (int z = 0; z < 2; z++)
+//       {
+//         ((int*)ptr)[z] = y1+z;
+//         printf("y1: %d, z: %d\n",y1, ((int*)ptr)[z]);
+//       }
+//     }
+// }
+
+// void uninitialized_pointer_wrapper(TaskArgs* args){
+//     void* original_ptr = *(void**)args->args[0].ptr;
+//     int* ptr_to_ptr1 = (int*)args->args[1].ptr;
+//     printf("original_ptr2222: %p\n", original_ptr);
+//     test_unintialized_pointer(original_ptr, *ptr_to_ptr1);
+//     *(void**)args->args[0].ptr = original_ptr;
+//     *(int*)args->args[1].ptr = *ptr_to_ptr1;
+//     printf("original_ptr3333: %p\n", original_ptr);
+// }
 
 int main() {
     TaskflowLib* tf = taskflow_create();
@@ -164,59 +187,23 @@ int main() {
 
     void *sum = NULL;
     int test_num = 10;
+    int *test_num_ptr = &test_num;
+    
     TaskArgs* args5 = create_task_args(2);
-
-    int size = sizeof(void*);
-    // Pass the address of sum and our private copy
-    set_task_arg_ptr(args5, 0, &sum, size);
-    set_task_arg_ptr(args5, 1, &test_num, sizeof(int));
-
-    TaskWrapper* task5 = taskflow_create_task(tf, "11", malloc_wrapper, args5);
-
     
-    TaskWrapper* task6 = taskflow_create_task(tf, "222", malloc_wrapper, args5);
+    // Pass the pointers with correct sizes
+    set_task_arg_ptr(args5, 0, &sum, sizeof(void*));
+    set_task_arg_ptr(args5, 1, &test_num_ptr, 4);  // Note: sizeof(int*) for pointer
+    
+    TaskWrapper* task5 = taskflow_create_task(tf, "11", malloc_wrapper1, args5);
+    TaskWrapper* task6 = taskflow_create_task(tf, "222", malloc_wrapper2, args5);
+    
     taskflow_execute(tf);
-    printf("sum:2 %p\n", sum);
+    int* sum_ptr = (int*)sum;
+    printf("sum: %d\n", sum_ptr[3]);
     printf("test_num: %d\n", test_num);
-    // TaskArgs* args6 = create_task_args(2);
-    
-    // set_task_arg_ptr(args6, 0, &sum, NULL);
-
-
-    // TaskWrapper* task6 = taskflow_create_task(tf, "uninitialized_pointer_wrapper", uninitialized_pointer_wrapper, args6);
     
     
-    // // taskflow_add_dependency(task4, task5);
-    // taskflow_add_dependency(task5, task6);
-
-    // // Create tasks with wrapper functions
-    // TaskWrapper* task1 = taskflow_create_task(tf, "math_task", math_task_wrapper, math_args);
-    // TaskWrapper* task2 = taskflow_create_task(tf, "string_task", string_task_wrapper, string_args);
-    // TaskWrapper* task3 = taskflow_create_task(tf, "array_task", array_task_wrapper, array_args);
-    // TaskWrapper* task5 = taskflow_create_task(tf, "final_task", final_task, args5);
-    
-    // Add dependencies
-    // taskflow_add_dependency(task1, task5);  // math_task -> string_task
-    // taskflow_add_dependency(task2, task5);  // string_task -> array_task
-    // taskflow_add_dependency(task3, task5);  // array_task -> final_task
-    
-    // Execute taskflow
-    // printf("\nExecuting taskflow...\n");
-    // printf("-------------------\n");
-    
-    // printf("-------------------\n");
-    // printf("Results:\n");
-    // printf("Math result: %d\n", math_result);
-    // printf("Array sum: %d\n", sum);
-    // printf("-------------------\n");
-    
-    // // Cleanup
-    // destroy_task_args(args1);
-    // destroy_task_args(math_args);
-    // destroy_task_args(string_args);
-    // destroy_task_args(array_args);
-    // destroy_task_args(args5);
     taskflow_destroy(tf);
-    
     return 0;
 }

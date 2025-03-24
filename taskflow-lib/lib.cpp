@@ -59,7 +59,6 @@ void set_task_arg_ptr(TaskArgs* args, size_t index, void* ptr, int size) {
     // Free any existing value storage
     if (args->args[index].ptr) {
         free(args->args[index].ptr);
-        free(args->args[index].private_copy);
     }
     args->args[index].ptr = ptr;
     args->args[index].size = size;
@@ -70,9 +69,16 @@ void taskflow_copy_back(TaskArgs* args) {
     
     for(size_t i = 0; i < args->num_args; i++) {
         if (args->args[i].ptr && args->args[i].private_copy && args->args[i].size > 0) {
-            memcpy(args->args[i].ptr, args->args[i].private_copy, args->args[i].size);
+            // For pointer to pointer, we need to handle differently
+            void* dst_ptr = *(void**)args->args[i].ptr;
+            void* src_ptr = *(void**)args->args[i].private_copy;
+            if (dst_ptr != NULL && src_ptr != NULL) {
+                memcpy(dst_ptr, src_ptr, args->args[i].size);
+                free(src_ptr);
+            }
+            free(args->args[i].private_copy);
+            args->args[i].private_copy = NULL;
         }
-        free(args->args[i].private_copy);
     }
 }
 
@@ -87,13 +93,23 @@ TaskWrapper* taskflow_create_task(
     // Deep copy of arguments
     TaskArgs* args_copy = create_task_args(args->num_args);
     for(size_t i = 0; i < args->num_args; i++) {
-        
-        // For pointers, just copy the pointer
         args_copy->args[i].ptr = args->args[i].ptr;
-        args_copy->args[i].private_copy = malloc(args->args[i].size);
-        memcpy(args_copy->args[i].private_copy, args->args[i].ptr, args->args[i].size);
         args_copy->args[i].size = args->args[i].size;
         
+        // First, allocate memory for the pointer itself
+        void* dst = malloc(sizeof(void*));
+        memcpy(dst, args->args[i].ptr, sizeof(void*));
+        
+        // If this is a pointer to a pointer, we need to also copy what it points to
+        void* src_ptr = *(void**)args->args[i].ptr;
+        if (src_ptr != NULL) {
+            // For pointer-to-pointer, we need to copy the pointed-to value
+            void* new_data = malloc(args->args[i].size);  // Size of what it points to
+            memcpy(new_data, src_ptr, args->args[i].size);  // Copy the actual value
+            *(void**)dst = new_data;
+        }
+        
+        args_copy->args[i].private_copy = dst;
     }
     
     auto task = tf->taskflow->emplace([func,name, args_copy]() {
