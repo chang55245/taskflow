@@ -97,9 +97,9 @@ TaskWrapper* taskflow_create_task(
     }
     
     auto task = tf->taskflow->emplace([func,name, args_copy]() {
-        printf("running task:%s \n",name);
+        // printf("running task:%s \n",name);
         func(args_copy);
-        printf("task %s finished\n", name);
+        // printf("task %s finished\n", name);
     });
     
     if (name) {
