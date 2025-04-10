@@ -16,7 +16,7 @@ extern "C" {
 TaskflowLib* taskflow_create() {
     TaskflowLib* tf = new TaskflowLib();
     tf->taskflow = new tf::Taskflow();
-    tf->executor = new tf::Executor();
+    tf->executor = new tf::Executor(8);
     return tf;
 }
 
